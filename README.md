@@ -36,3 +36,51 @@ SpotifyClone/
 ├── postcss.config.js       # PostCSS configuration
 ├── tailwind.config.js      # Tailwind CSS configuration
 └── vite.config.js          # Vite configuration
+
+---
+
+# Installation
+Follow these steps to set up and run the project locally:
+
+1. **Clone the Repository**  
+   ```bash
+   git clone https://github.com/BTREE-SYSTEMS/SpotifyClone.git
+
+2. **Navigate to the Project Directory**  
+   ```bash
+   cd SpotifyClone
+
+3. **Install Dependencies**  
+   ```bash
+   npm install
+
+4. **Start the Development Server**  
+   ```bash
+   npm start
+
+---
+
+### Usage  
+Once the server starts, open your web browser and go to http://localhost:3000 to view the project in action.
+
+### Screenshots  
+_Add screenshots here to represent the project. Below are placeholders for reference:_  
+
+![Homepage Screenshot](path_to_homepage_screenshot.png)  
+*Homepage*  
+
+![Music Player Screenshot](path_to_player_screenshot.png)  
+*Music Player*
+
+---
+
+### Social Platforms  
+Follow us on:  
+- YouTube  
+- Instagram  
+- Facebook  
+- LinkedIn  
+- Twitter  
+
+
+
