@@ -37,7 +37,7 @@ SpotifyClone/
 ├── tailwind.config.js      # Tailwind CSS configuration
 └── vite.config.js          # Vite configuration
 
----
+```
 
 ## Installation
 Follow these steps to set up and run the project locally:
