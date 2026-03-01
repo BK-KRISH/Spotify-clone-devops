@@ -1,54 +1,44 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = "bkkrish007/spotify-devops"
-        EC2_IP = "13.200.246.186"
-    }
-
     stages {
 
-        stage('Install Dependencies') {
+        stage('Install & Build (Node Container)') {
+            agent {
+                docker {
+                    image 'node:18'
+                    args '-v /var/run/docker.sock:/var/run/docker.sock'
+                }
+            }
             steps {
                 sh 'npm install'
-            }
-        }
-
-        stage('Build Application') {
-            steps {
                 sh 'npm run build'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME:latest -f docker/Dockerfile .'
+                sh 'docker build -t spotify-clone -f docker/Dockerfile .'
             }
         }
 
         stage('Push to DockerHub') {
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh '''
-                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                    docker push $IMAGE_NAME:latest
-                    '''
-                }
+                sh '''
+                docker tag spotify-clone bkkrish007/spotify-devops:latest
+                docker push bkkrish007/spotify-devops:latest
+                '''
             }
         }
 
         stage('Deploy to EC2') {
             steps {
                 sh '''
-                ssh -o StrictHostKeyChecking=no ubuntu@$EC2_IP "
-                    docker stop spotify || true &&
-                    docker rm spotify || true &&
-                    docker pull $IMAGE_NAME:latest &&
-                    docker run -d -p 8081:80 --name spotify $IMAGE_NAME:latest
+                ssh -o StrictHostKeyChecking=no ubuntu@13.200.246.186 "
+                docker stop spotify || true &&
+                docker rm spotify || true &&
+                docker pull bkkrish007/spotify-devops:latest &&
+                docker run -d -p 8081:80 --name spotify bkkrish007/spotify-devops:latest
                 "
                 '''
             }
