@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = "bkkrish007/spotify-devops"
-        EC2_HOST   = "ubuntu@15.207.18.219"
+        EC2_HOST = "ubuntu@3.6.224.208"
     }
 
     stages {
