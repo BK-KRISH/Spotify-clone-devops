@@ -1,47 +1,87 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_NAME = "bkkrish007/spotify-devops"
+        EC2_HOST   = "ubuntu@13.200.246.186"
+    }
+
     stages {
 
+        /* ==============================
+           BUILD APP INSIDE NODE CONTAINER
+        ============================== */
         stage('Install & Build (Node Container)') {
             agent {
                 docker {
-                    image 'node:18'
+                    image 'node:20'   // Node 20 required by react-router
                     args '-v /var/run/docker.sock:/var/run/docker.sock'
                 }
             }
             steps {
+                sh 'node -v'
                 sh 'npm install'
                 sh 'npm run build'
             }
         }
 
+        /* ==============================
+           BUILD DOCKER IMAGE
+        ============================== */
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t spotify-clone -f docker/Dockerfile .'
-            }
-        }
-
-        stage('Push to DockerHub') {
-            steps {
                 sh '''
-                docker tag spotify-clone bkkrish007/spotify-devops:latest
-                docker push bkkrish007/spotify-devops:latest
+                docker build -t spotify-clone -f docker/Dockerfile .
                 '''
             }
         }
 
+        /* ==============================
+           LOGIN + PUSH DOCKERHUB
+        ============================== */
+        stage('Push to DockerHub') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+
+                    docker tag spotify-clone $IMAGE_NAME:latest
+                    docker push $IMAGE_NAME:latest
+
+                    docker logout
+                    '''
+                }
+            }
+        }
+
+        /* ==============================
+           DEPLOY TO AWS EC2
+        ============================== */
         stage('Deploy to EC2') {
             steps {
                 sh '''
-                ssh -o StrictHostKeyChecking=no ubuntu@13.200.246.186 "
-                docker stop spotify || true &&
-                docker rm spotify || true &&
-                docker pull bkkrish007/spotify-devops:latest &&
-                docker run -d -p 8081:80 --name spotify bkkrish007/spotify-devops:latest
-                "
+                ssh -o StrictHostKeyChecking=no $EC2_HOST << EOF
+                    docker stop spotify || true
+                    docker rm spotify || true
+                    docker pull $IMAGE_NAME:latest
+                    docker run -d -p 8081:80 --name spotify $IMAGE_NAME:latest
+                EOF
                 '''
             }
+        }
+    }
+
+    /* ==============================
+       CLEANUP
+    ============================== */
+    post {
+        always {
+            cleanWs()
         }
     }
 }
