@@ -30,17 +30,19 @@ pipeline {
                     sh '''
                     echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
                     docker push $DOCKER_IMAGE
+                    docker logout
                     '''
                 }
             }
         }
 
-        stage('Deploy Container') {
+        stage('Deploy') {
             steps {
                 sh '''
                 docker stop spotify || true
                 docker rm spotify || true
-                docker run -d -p 8081:80 --name spotify $DOCKER_IMAGE
+                docker pull $DOCKER_IMAGE
+                docker run -d --name spotify -p 8081:80 $DOCKER_IMAGE
                 '''
             }
         }
